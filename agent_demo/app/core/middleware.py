@@ -1,0 +1,180 @@
+"""
+中间件
+"""
+
+import logging
+import uuid
+
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
+
+from app.core import g
+from app.core.context import request_id_var
+from app.core.exceptions import CustomException
+from app.core.responses import Responses
+from app.core.status import Status
+
+__all__ = [
+    "add_middleware_and_exceptions",
+]
+
+logger = logging.getLogger(__name__)
+
+
+def add_middleware_and_exceptions(app: FastAPI):
+    """注册中间件&异常处理"""
+    app.add_middleware(HttpMiddleware)
+    app.add_middleware(CorsMiddleware)
+    # #
+    app.add_exception_handler(CustomException, ExceptionsHandler.custom_exception_handler)
+    app.add_exception_handler(RequestValidationError, ExceptionsHandler.request_validation_handler)
+    app.add_exception_handler(HTTPException, ExceptionsHandler.http_exception_handler)
+
+
+class HttpMiddleware(BaseHTTPMiddleware):
+    _HEADERS = {
+        # 可添加相关头
+    }
+
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        request_id_key = "X-Request-ID"
+        request_id = await self._get_or_create_request_id(request, key=request_id_key)
+        token = request_id_var.set(request_id)
+        request.state.request_id = request_id
+        try:
+            response = await call_next(request)
+            response.headers[request_id_key] = request_id
+            for key, value in self._HEADERS.items():
+                if key not in response.headers:
+                    response.headers[key] = value
+            return response
+        except Exception as exc:
+            return await self.handle_exception(request, exc)
+        finally:
+            request_id_var.reset(token)
+
+    @staticmethod
+    async def _get_or_create_request_id(request: Request, key: str, prefix: str = "") -> str:
+        request_id = request.headers.get(key)
+        if not request_id:
+            request_id = f"{prefix}{uuid.uuid4()}"
+        return request_id
+
+    @staticmethod
+    async def handle_exception(
+        request: Request,
+        exc: Exception,
+        log_traceback: bool = True,
+        log_request: bool = True,
+    ) -> JSONResponse:
+        ctx = ""
+        if log_request:
+            ctx = f"\nQuery params: {request.query_params or None!r}\nBody: {await request.body() or None!r}"
+        lmsg = f'- "{request.method} {request.url.path}" {Status.INTERNAL_SERVER_ERROR.code} {type(exc).__name__}: {ctx}\n{exc}'
+        if log_traceback:
+            logger.exception(lmsg)
+        else:
+            logger.error(lmsg)
+        return Responses.failure(
+            error=exc,
+            status=Status.INTERNAL_SERVER_ERROR,
+        )
+
+
+class CorsMiddleware(CORSMiddleware):
+    def __init__(self, app, **kwargs):
+        super().__init__(
+            app,
+            allow_credentials=g.config.APP_ALLOW_CREDENTIALS,
+            allow_origins=g.config.APP_ALLOW_ORIGINS,
+            allow_methods=g.config.APP_ALLOW_METHODS,
+            allow_headers=g.config.APP_ALLOW_HEADERS,
+            **kwargs,
+        )
+
+
+class ExceptionsHandler:
+    @staticmethod
+    async def custom_exception_handler(
+        request: Request,
+        exc: CustomException,
+        log_traceback: bool = True,
+        log_request: bool = True,
+    ) -> JSONResponse:
+        ctx = ""
+        if log_request:
+            ctx = f"\nQuery params: {request.query_params or None!r}\nBody: {await request.body() or None!r}"
+        lmsg = f'- "{request.method} {request.url.path}" {exc.code}: {ctx}\n{exc.msg}'
+        if log_traceback:
+            logger.exception(lmsg)
+        else:
+            logger.error(lmsg)
+        return Responses.failure(
+            status=exc.status,
+            msg=exc.msg,
+            code=exc.code,
+            error=exc.error,
+            data=exc.data,
+        )
+
+    @staticmethod
+    async def request_validation_handler(
+        request: Request,
+        exc: RequestValidationError,
+        display_all: bool = False,
+        log_traceback: bool = True,
+        log_request: bool = True,
+    ) -> JSONResponse:
+        ctx = ""
+        if log_request:
+            ctx = f"\nQuery params: {request.query_params or None!r}\nBody: {await request.body() or None!r}"
+        if display_all:
+            msg = " & ".join(
+                [
+                    f"{error['loc'][-1]} ({error['type']}) {error['msg'].replace('Value error, ', '').lower()}"
+                    for error in exc.errors()
+                ]
+            )
+        else:
+            error = exc.errors()[0]
+            msg = f"{error['loc'][-1]} ({error['type']}) {error['msg'].replace('Value error, ', '').lower()}"
+        lmsg = f'- "{request.method} {request.url.path}" {Status.VALIDATION_ERROR.code}: {ctx}\n{msg}'
+        if log_traceback:
+            logger.exception(lmsg)
+        else:
+            logger.error(lmsg)
+        return Responses.failure(
+            status=Status.VALIDATION_ERROR,
+            msg=msg,
+            error=exc,
+        )
+
+    @staticmethod
+    async def http_exception_handler(
+        request: Request,
+        exc: HTTPException,
+        log_traceback: bool = True,
+        log_request: bool = True,
+    ) -> JSONResponse:
+        ctx = ""
+        if log_request:
+            ctx = f"\nQuery params: {request.query_params or None!r}\nBody: {await request.body() or None!r}"
+        lmsg = f'- "{request.method} {request.url.path}" {exc.status_code}: {ctx}\n{exc.detail}'
+        if log_traceback:
+            logger.exception(lmsg)
+        else:
+            logger.error(lmsg)
+        return Responses.failure(
+            status=Status.from_status_code(exc.status_code),
+            msg=exc.detail,
+            error=exc,
+        )
