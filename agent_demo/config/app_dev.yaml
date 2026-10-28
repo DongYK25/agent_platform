@@ -16,12 +16,22 @@ APP_ALLOW_METHODS:
   - "*"
 APP_ALLOW_HEADERS:
   - "*"
+# # #
+# DB_DRIVERNAME: sqlite
+# DB_ASYNC_DRIVERNAME: sqlite+aiosqlite
+# DB_DATABASE: data/db/app_dev.sqlite3
+# DB_USERNAME:
+# DB_PASSWORD:
+# DB_HOST:
+# DB_PORT:
+# DB_CHARSET:
+
 # #
-DB_DRIVERNAME: sqlite
-DB_ASYNC_DRIVERNAME: sqlite+aiosqlite
-DB_DATABASE: data/db/app_dev.sqlite3
-DB_USERNAME:
-DB_PASSWORD:
-DB_HOST:
-DB_PORT:
-DB_CHARSET:
+DB_DRIVERNAME: mysql+pymysql
+DB_ASYNC_DRIVERNAME: mysql+aiomysql
+DB_DATABASE: server
+DB_USERNAME: root
+DB_PASSWORD: root
+DB_HOST: localhost
+DB_PORT: 3306
+DB_CHARSET: utf8mb4

@@ -13,3 +13,6 @@ uv pip install -r requirements.txt
 
 # 5. 启动（全程不用 activate）
 uv run python runserver.py
+
+# 学习记录
+1.env中设置开发环境是dev，数据库等相关配置在这里配置

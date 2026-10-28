@@ -26,6 +26,7 @@ class User(DeclBase):
     nickname = mapped_column(String(50), nullable=True, comment="昵称")
     avatar = mapped_column(String(255), nullable=True, comment="头像URL")
     age = mapped_column(Integer, nullable=False, comment="年龄")
+    # test = mapped_column(String(11), nullable=False, comment="测试字段")
     gender = mapped_column(Integer, nullable=False, comment="性别")
     last_login_at = mapped_column(BigInteger, nullable=True, comment="最后登录时间")
     created_at = mapped_column(BigInteger, default=now_timestamp, nullable=False, comment="创建时间")
