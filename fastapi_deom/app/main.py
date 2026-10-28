@@ -12,7 +12,8 @@ from .routers import  users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    # create_db_and_tables()
+    pass
     yield
 
 

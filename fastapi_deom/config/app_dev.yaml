@@ -5,6 +5,8 @@ DB_PASSWORD: root
 DB_HOST: localhost
 DB_PORT: 3306
 DB_CHARSET: utf8mb4
+DATABASE_URL: postgresql+psycopg://dong:root@120.48.28.15:5432/server
+DB_SCHEMA: agent
 JWT_SECRET: dev-jwt-secret-key-for-fastapi-deom
 JWT_ALGORITHM: HS256
 JWT_EXPIRE_DAYS: 1

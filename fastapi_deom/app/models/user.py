@@ -1,7 +1,12 @@
 import re
+from uuid import UUID, uuid4
 
 from pydantic import field_validator
+from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlmodel import Field, SQLModel
+
+from .base import RecordBase, table_args
 
 _USERNAME = re.compile(r"^[A-Za-z0-9_]+$")
 
@@ -29,9 +34,19 @@ class UserBase(SQLModel):
         return ensure_username(value)
 
 
-class User(UserBase, table=True):
+class User(RecordBase, UserBase, table=True):
     __tablename__ = "users"
+    __table_args__ = table_args()
 
-    id: int | None = Field(default=None, primary_key=True)
+    user_uuid: UUID = Field(
+        default_factory=uuid4,
+        sa_type=PG_UUID(as_uuid=True),
+        sa_column_kwargs={
+            "nullable": False,
+            "unique": True,
+            "server_default": text("gen_random_uuid()"),
+        },
+    )
+    phone: str | None = Field(default=None, max_length=20, description="手机号")
     # 当前练习直接保存提交的密码，接入登录时再改成哈希。
     password: str
