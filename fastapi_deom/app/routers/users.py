@@ -1,11 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
+from ..middleware.auth import create_token
+
 from ..dependencies import SessionDep
 from ..models.user import User
+from ..schemas.responseCommon import ResponseCommon
 from ..schemas.user import UserCreate, UserPublic, UserUpdate
 
 router = APIRouter(
@@ -28,14 +31,23 @@ def create_user(user: UserCreate, session: SessionDep):
     return db_user
 
 
-@router.get("/", response_model=list[UserPublic])
+@router.get("/", response_model=ResponseCommon)
 def read_users(
+    request: Request,
     session: SessionDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 100,
 ):
+    # 中间件已校验并解码 token，这里就是登录时放进去的 id、username。
+    payload = request.state.token_data
+    user_id = payload.get("id")
+    username = payload.get("username")
+    print(111111,user_id,username)
+    if user_id is None or not username:
+        return ResponseCommon.failed(msg="token 中缺少用户信息")
+
     users = session.exec(select(User).offset(offset).limit(limit)).all()
-    return users
+    return ResponseCommon.success(data=users)
 
 
 @router.get("/{user_id}", response_model=UserPublic)
@@ -70,3 +82,18 @@ def delete_user(user_id: int, session: SessionDep):
     session.delete(user)
     session.commit()
     return {"ok": True}
+
+
+
+@router.post("/login")
+def login(username: str, password: str, session: SessionDep):
+    try:
+        if not username or not password:
+            raise HTTPException(status_code=400, detail="Username or password is required")
+        user = session.exec(select(User).where(User.username == username, User.password == password)).one()
+        token = create_token({"id":user.id, "username":user.username})
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Username or email already exists")
+    # session.refresh(db_user)
+    return {"token": token}

@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .database import create_db_and_tables
-from .internal import admin
+# from .internal import admin
+from .middleware.auth import JWTAuthMiddleware
 from .middleware.cors import add_cors_middleware
 from .middleware.process_time import ProcessTimeMiddleware
-from .routers import items, users
+from .routers import  users
 
 
 @asynccontextmanager
@@ -18,11 +19,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="FastAPI Demo", lifespan=lifespan)
 
 app.add_middleware(ProcessTimeMiddleware)
+app.add_middleware(JWTAuthMiddleware)
 add_cors_middleware(app)
 
 app.include_router(users.router)
-app.include_router(items.router)
-app.include_router(admin.router, prefix="/admin", tags=["admin"])
+# app.include_router(items.router)
+# app.include_router(admin.router, prefix="/admin", tags=["admin"])
 
 
 @app.get("/")
