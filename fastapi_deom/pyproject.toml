@@ -1,0 +1,13 @@
+[project]
+name = "fastapi-deom"
+version = "0.1.0"
+description = "FastAPI bigger-application layout with SQLModel user CRUD"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]>=0.115",
+    "sqlmodel>=0.0.22",
+    "email-validator>=2.0",
+]
+
+[tool.fastapi]
+entrypoint = "app.main:app"
