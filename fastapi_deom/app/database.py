@@ -1,13 +1,21 @@
-from pathlib import Path
-
+from sqlalchemy import URL
 from sqlmodel import SQLModel, create_engine
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-sqlite_file = BASE_DIR / "database.db"
-sqlite_url = f"sqlite:///{sqlite_file.as_posix()}"
+from .config import load_config
 
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
+_cfg = load_config()
+
+database_url = URL.create(
+    drivername=_cfg["DB_DRIVERNAME"],
+    username=_cfg["DB_USERNAME"],
+    password=_cfg["DB_PASSWORD"],
+    host=_cfg["DB_HOST"],
+    port=int(_cfg["DB_PORT"]),
+    database=_cfg["DB_DATABASE"],
+    query={"charset": _cfg["DB_CHARSET"]},
+)
+
+engine = create_engine(database_url, pool_pre_ping=True)
 
 
 def create_db_and_tables() -> None:

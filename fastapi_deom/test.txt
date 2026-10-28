@@ -10,3 +10,11 @@
 │   └── internal
 │       ├── __init__.py
 │       └── admin.py
+
+uvicorn app.main:app --reload
+
+Swagger UI（可直接试接口）： http://127.0.0.1:8000/docs
+ReDoc（更适合阅读）： http://127.0.0.1:8000/redoc
+OpenAPI JSON： http://127.0.0.1:8000/openapi.json
+
+下载：curl http://127.0.0.1:8000/openapi.json -o openapi.json

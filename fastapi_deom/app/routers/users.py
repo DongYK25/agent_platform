@@ -10,7 +10,7 @@ from ..schemas.user import UserCreate, UserPublic, UserUpdate
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"],
+    tags=["users"], ##这是写给接口文档的分组名
     responses={404: {"description": "Not found"}},
 )
 
