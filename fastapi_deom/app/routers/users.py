@@ -17,7 +17,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-
+##response_model是写给接口文档的返回格式
 @router.post("/", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, session: SessionDep):
     db_user = User.model_validate(user)
@@ -44,7 +44,7 @@ def read_users(
     username = payload.get("username")
     print(111111,user_id,username)
     if user_id is None or not username:
-        return ResponseCommon.failed(msg="token 中缺少用户信息")
+        raise HTTPException(status_code=401, detail="token 中缺少用户信息")
 
     users = session.exec(select(User).offset(offset).limit(limit)).all()
     return ResponseCommon.success(data=users)
@@ -87,13 +87,12 @@ def delete_user(user_id: int, session: SessionDep):
 
 @router.post("/login")
 def login(username: str, password: str, session: SessionDep):
-    try:
-        if not username or not password:
-            raise HTTPException(status_code=400, detail="Username or password is required")
-        user = session.exec(select(User).where(User.username == username, User.password == password)).one()
-        token = create_token({"id":user.id, "username":user.username})
-    except IntegrityError:
-        session.rollback()
-        raise HTTPException(status_code=409, detail="Username or email already exists")
-    # session.refresh(db_user)
-    return {"token": token}
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="请填写完整信息")
+    user = session.exec(
+        select(User).where(User.username == username, User.password == password)
+    ).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
+    token = create_token({"id": user.id, "username": user.username})
+    return ResponseCommon.success(data=token)

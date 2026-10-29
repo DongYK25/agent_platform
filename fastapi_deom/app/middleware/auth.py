@@ -6,6 +6,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from ..config import load_config
+from ..exception_handlers import error_content
 
 _cfg = load_config()
 _SECRET = _cfg["JWT_SECRET"]
@@ -48,7 +49,7 @@ def _is_public(method: str, path: str) -> bool:
 def _unauthorized(detail: str) -> JSONResponse:
     return JSONResponse(
         status_code=401,
-        content={"detail": detail},
+        content=error_content(401, detail),
         headers={"WWW-Authenticate": "Bearer"},
     )
 

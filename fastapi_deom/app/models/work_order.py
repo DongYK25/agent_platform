@@ -21,3 +21,7 @@ class WorkOrder(RecordBase, table=True):
     creator_id: int = Field(sa_type=BigInteger)
     handler_id: int | None = Field(default=None, sa_type=BigInteger)
     finished_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+
+# class WorkOrderBase(RecordBase, table=True):
+#     __tablename__ = "work_order"
+#     __table_args__ = table_args()
