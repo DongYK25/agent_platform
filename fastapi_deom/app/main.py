@@ -8,7 +8,7 @@ from .exception_handlers import register_exception_handlers
 from .middleware.auth import JWTAuthMiddleware
 from .middleware.cors import add_cors_middleware
 from .middleware.process_time import ProcessTimeMiddleware
-from .routers import  users,work_order
+from .routers import agent, users, work_order
 
 
 @asynccontextmanager
@@ -27,6 +27,7 @@ add_cors_middleware(app)
 
 app.include_router(users.router)
 app.include_router(work_order.router)
+app.include_router(agent.router)
 # app.include_router(admin.router, prefix="/admin", tags=["admin"])
 
 

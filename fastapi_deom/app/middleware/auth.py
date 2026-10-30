@@ -19,6 +19,7 @@ _PUBLIC_POST_PATHS = {
     "/users/register",
     "/login",
     "/users/login",
+    "/agent/chat",
 }
 
 _DOC_PREFIXES = ("/docs", "/redoc", "/openapi.json")

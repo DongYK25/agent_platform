@@ -9,7 +9,7 @@ from ..middleware.auth import create_token
 from ..dependencies import SessionDep
 from ..models.user import User
 from ..schemas.responseCommon import ResponseCommon
-from ..schemas.user import UserCreate, UserPublic, UserUpdate
+from ..schemas.user import UserCreate, UserUpdate
 
 router = APIRouter(
     prefix="/users",
@@ -18,7 +18,7 @@ router = APIRouter(
 )
 
 ##response_model是写给接口文档的返回格式
-@router.post("/", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ResponseCommon, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, session: SessionDep):
     db_user = User.model_validate(user)
     session.add(db_user)
@@ -28,7 +28,7 @@ def create_user(user: UserCreate, session: SessionDep):
         session.rollback()
         raise HTTPException(status_code=409, detail="Username or email already exists")
     session.refresh(db_user)
-    return db_user
+    return ResponseCommon.success(data=db_user)
 
 
 @router.get("/", response_model=ResponseCommon)
@@ -50,15 +50,15 @@ def read_users(
     return ResponseCommon.success(data=users)
 
 
-@router.get("/{user_id}", response_model=UserPublic)
+@router.get("/{user_id}", response_model=ResponseCommon)
 def read_user(user_id: int, session: SessionDep):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return ResponseCommon.success(data=user)
 
 
-@router.patch("/{user_id}", response_model=UserPublic)
+@router.patch("/{user_id}", response_model=ResponseCommon)
 def update_user(user_id: int, user: UserUpdate, session: SessionDep):
     db_user = session.get(User, user_id)
     if not db_user:
@@ -71,7 +71,7 @@ def update_user(user_id: int, user: UserUpdate, session: SessionDep):
         session.rollback()
         raise HTTPException(status_code=409, detail="Username or email already exists")
     session.refresh(db_user)
-    return db_user
+    return ResponseCommon.success(data=db_user)
 
 
 @router.delete("/{user_id}")
@@ -81,7 +81,7 @@ def delete_user(user_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="User not found")
     session.delete(user)
     session.commit()
-    return {"ok": True}
+    return ResponseCommon.success()
 
 
 

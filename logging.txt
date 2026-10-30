@@ -1,0 +1,8 @@
+Your Conversation Log:
+You: hello
+AI: Hello! How can I help you today?
+
+You: six seven
+AI: Six seven! 😄 Did you mean 67, or is there something you’d like help with?
+
+End of Conversation
