@@ -25,9 +25,10 @@ _PUBLIC_POST_PATHS = {
 _DOC_PREFIXES = ("/docs", "/redoc", "/openapi.json")
 
 
-def create_token(payload: dict) -> str:
+def create_token(id,uuid,username) -> str:
     """登录成功后调用。payload 放用户标识，不要放密码。"""
-    data = payload.copy()
+    # data = payload.copy()
+    data = {{"id": id, "uid": uuid,"username": username}}
     data["exp"] = datetime.now(timezone.utc) + timedelta(days=_EXPIRE_DAYS)
     return jwt.encode(data, _SECRET, algorithm=_ALGORITHM)
 

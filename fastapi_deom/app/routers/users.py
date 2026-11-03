@@ -94,5 +94,5 @@ def login(username: str, password: str, session: SessionDep):
     ).first()
     if user is None:
         raise HTTPException(status_code=401, detail="用户名或密码错误")
-    token = create_token({"id": user.id, "username": user.username})
+    token = create_token(user.id, user.user_uuid, user.username)
     return ResponseCommon.success(data=token)
