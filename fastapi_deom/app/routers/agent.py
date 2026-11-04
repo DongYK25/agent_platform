@@ -1,13 +1,14 @@
 import sys
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException,Request
 
 _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from agent.memory import chat
+from agent.memory_api import chat_api
 
 from ..schemas.agent import AgentRequest, AgentResponse
 from ..schemas.responseCommon import ResponseCommon 
@@ -18,12 +19,14 @@ router = APIRouter(
 
 
 @router.post("/chat", response_model=ResponseCommon)
-def agent_chat(body: AgentRequest):
+def agent_chat(request: Request,body: AgentRequest):
     text = body.msg.strip()
     if not text:
         raise HTTPException(status_code=400, detail="msg 不能为空")
     try:
-        reply = chat(text)
+        payload = request.state.token_data
+        user_uid = payload.get("uid")
+        reply = chat_api(text,"d7f06fd9-9f85-f255-0482-1a2a721ceec1",user_uid)
     except Exception as exc:
         raise HTTPException(status_code=502, detail="模型调用失败") from exc
     return ResponseCommon.success(data=reply)

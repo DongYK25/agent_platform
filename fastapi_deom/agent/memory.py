@@ -4,18 +4,12 @@ from typing import TypedDict, List, Union
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
-from typing import Annotated, Sequence, TypedDict
-from langchain_core.messages import BaseMessage
-from langgraph.graph.message import add_messages
+
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 class AgentState(TypedDict):
     messages: List[Union[HumanMessage, AIMessage]]
-
-class AgentState2(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], add_messages]
 
 llm = ChatOpenAI(
     model=os.getenv("DEEPSEEK_MODEL") or "deepseek-v4-flash",
@@ -28,7 +22,7 @@ def process(state: AgentState) -> AgentState:
     """This node will solve the request you input"""
     response = llm.invoke(state["messages"])
 
-    state["messages"].append(AIMessage(content=response.content)) 
+    state["messages"].append(AIMessage(content=response.content))
     print(f"\nAI: {response.content}")
     print("CURRENT STATE: ", state["messages"])
 
@@ -40,22 +34,6 @@ graph.add_edge(START, "process")
 graph.add_edge("process", END)
 agent = graph.compile()
 
-
-def process2(state: AgentState2) -> dict:
-    """只返回这一轮的 AI 消息，交给 add_messages 追加，避免整表再拼一次。"""
-    response = llm.invoke(state["messages"])
-    ai_message = AIMessage(content=response.content)
-    print(f"\nAI: {response.content}")
-    print("CURRENT STATE2: ", list(state["messages"]) + [ai_message])
-    return {"messages": [ai_message]}
-
-
-graph2 = StateGraph(AgentState2)
-graph2.add_node("process", process2)
-graph2.add_edge(START, "process")
-graph2.add_edge("process", END)
-agent2 = graph2.compile(checkpointer=MemorySaver())
-THREAD_CONFIG = {"configurable": {"thread_id": "chat2-demo"}}
 
 conversation_history = []
 
@@ -69,26 +47,11 @@ def chat(user_input: str) -> str:
     reply = conversation_history[-1].content
     return reply if isinstance(reply, str) else str(reply)
 
-def chat2(user_input: str) -> str:
-    """只送入本轮用户消息；同一 thread 的历史由检查点和 add_messages 合并。"""
-    result = agent2.invoke(
-        {"messages": [HumanMessage(content=user_input)]},
-        config=THREAD_CONFIG,
-    )
-    print("chat2 state:", result)
-    reply = result["messages"][-1].content
-    return reply if isinstance(reply, str) else str(reply)
-
-def _messages_to_save():
-    snapshot = agent2.get_state(THREAD_CONFIG)
-    messages = (snapshot.values or {}).get("messages") or []
-    return list(messages) or conversation_history
-
 def _save_log() -> None:
     with open("logging.txt", "w", encoding="utf-8") as file:
         file.write("Your Conversation Log:\n")
 
-        for message in _messages_to_save():
+        for message in conversation_history:
             if isinstance(message, HumanMessage):
                 file.write(f"You: {message.content}\n")
             elif isinstance(message, AIMessage):
@@ -101,6 +64,6 @@ def _save_log() -> None:
 if __name__ == "__main__":
     user_input = input("Enter: ")
     while user_input != "exit":
-        chat2(user_input)
+        chat(user_input)
         user_input = input("Enter: ")
     _save_log()
