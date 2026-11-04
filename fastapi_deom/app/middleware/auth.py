@@ -13,13 +13,12 @@ _SECRET = _cfg["JWT_SECRET"]
 _ALGORITHM = _cfg.get("JWT_ALGORITHM", "HS256")
 _EXPIRE_DAYS = int(_cfg.get("JWT_EXPIRE_DAYS", 1))
 
-# 登录、注册不校验 token。登录接口还没写，路径先留在这里。
+# 登录、注册不校验 token。其他所有接口都需要校验 token。
 _PUBLIC_POST_PATHS = {
     "/users",  # 注册：POST /users/
     "/users/register",
     "/login",
     "/users/login",
-    "/agent/chat",
 }
 
 _DOC_PREFIXES = ("/docs", "/redoc", "/openapi.json")
