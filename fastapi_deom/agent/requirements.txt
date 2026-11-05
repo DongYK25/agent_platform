@@ -1,8 +1,13 @@
 # Install with: pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 # langchain-deepseek
 langchain
+langchain-openai
 python-dotenv
 langgraph
+# PostgresSaver 是独立扩展包，不包含在 langgraph 主包中。
+langgraph-checkpoint-postgres
+# PostgresSaver 使用 Psycopg 3；binary 适合本地学习和大多数部署环境。
+psycopg[binary]>=3.2
 IPython
 jupyter
 
