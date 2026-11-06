@@ -12,7 +12,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from agent.db import get_history_message
-from agent.memory_api import chat_api
+from fastapi_deom.agent.memory.memory_api import chat_api
 
 from ..dependencies import SessionDep
 from ..models.base import utcnow

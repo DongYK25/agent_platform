@@ -3,6 +3,7 @@
 langchain
 langchain-openai
 python-dotenv
+typing-extensions>=4.7
 langgraph
 # PostgresSaver 是独立扩展包，不包含在 langgraph 主包中。
 langgraph-checkpoint-postgres

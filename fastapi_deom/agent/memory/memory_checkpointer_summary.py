@@ -12,26 +12,25 @@
 import os
 from pathlib import Path
 from threading import Lock
-from typing import Annotated, Sequence, TypedDict
 
 from dotenv import load_dotenv
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
 from psycopg.conninfo import make_conninfo
 
 from app.database import DB_SCHEMA, database_url
+from .memory_compression import (
+    AgentState,
+    SummaryConfig,
+    approximate_state_tokens,
+    build_model_messages,
+    create_summary_node,
+    route_before_model,
+)
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
-
-
-class AgentState(TypedDict):
-    # add_messages 是一个 reducer（归并函数）。
-    # 新节点只需返回本轮新消息，LangGraph 会将其追加到已有 messages。
-    messages: Annotated[Sequence[BaseMessage], add_messages]
-
 
 llm = ChatOpenAI(
     model=os.getenv("DEEPSEEK_MODEL") or "deepseek-v4-flash",
@@ -39,10 +38,22 @@ llm = ChatOpenAI(
     base_url="https://api.deepseek.com",
 )
 
+# 阈值可放进 agent/.env 调整，无需修改代码：
+# SUMMARY_TRIGGER_TOKENS=6000
+# SUMMARY_KEEP_RECENT_TOKENS=2000
+# SUMMARY_MIN_RECENT_TURNS=2
+SUMMARY_CONFIG = SummaryConfig(
+    trigger_tokens=int(os.getenv("SUMMARY_TRIGGER_TOKENS", "6000")),
+    keep_recent_tokens=int(os.getenv("SUMMARY_KEEP_RECENT_TOKENS", "2000")),
+    min_recent_turns=int(os.getenv("SUMMARY_MIN_RECENT_TURNS", "2")),
+)
+# 总结和正常回复可以共用模型，但限制总结输出长度以控制成本。
+summary_llm = llm.bind(max_tokens=int(os.getenv("SUMMARY_MAX_OUTPUT_TOKENS", "800")))
+
 
 def process(state: AgentState) -> dict:
-    """模型能看到 checkpointer 恢复出来的全部当前会话消息。"""
-    response = llm.invoke(state["messages"])
+    """模型看到“较早摘要 + 近期详细消息”，而不是无限增长的完整历史。"""
+    response = llm.invoke(build_model_messages(state))
     # response 本身已经是 AIMessage，不需要再复制成一个新 AIMessage。
     return {"messages": [response]}
 
@@ -51,7 +62,20 @@ def process(state: AgentState) -> dict:
 # compile 时传入 checkpointer，图才会获得读取和保存状态的能力。
 graph_builder = StateGraph(AgentState)
 graph_builder.add_node("process", process)
-graph_builder.add_edge(START, "process")
+graph_builder.add_node(
+    "summarize",
+    create_summary_node(summary_llm, SUMMARY_CONFIG),
+)
+# 收到本轮 HumanMessage 后先估算上下文；超阈值则先压缩，再调用主模型。
+graph_builder.add_conditional_edges(
+    START,
+    lambda state: route_before_model(state, SUMMARY_CONFIG),
+    {
+        "summarize": "summarize",
+        "process": "process",
+    },
+)
+graph_builder.add_edge("summarize", "process")
 graph_builder.add_edge("process", END)
 
 
@@ -127,20 +151,29 @@ def chat_api(user_input: str, session_uid: str, user_uid: str) -> str:
     reply = result["messages"][-1].content
     return reply if isinstance(reply, str) else str(reply)
 
-def read(user_uid,session_uid):
-    config = {
-    "configurable": {
-        "thread_id": f"{user_uid}:{session_uid}"
-        }
-    }
+
+def read(user_uid: str, session_uid: str) -> None:
+    """显示当前有效记忆：较早摘要与仍保留的近期消息原文。"""
+    config = _thread_config(user_uid=user_uid, session_uid=session_uid)
 
     with PostgresSaver.from_conn_string(CHECKPOINT_CONNINFO) as checkpointer:
         state = checkpointer.get(config)
 
         if state:
-            # print(11111,state)
-            for message in state["channel_values"]["messages"]:
+            values = state["channel_values"]
+            summary = values.get("summary")
+            print(
+                "当前有效上下文估算 token:",
+                approximate_state_tokens(values),
+            )
+            print("\n=== 较早对话摘要 ===")
+            print(summary or "尚未触发总结")
+
+            print("\n=== 近期详细消息 ===")
+            for message in values.get("messages", []):
                 print(message.type, message.content)
+        else:
+            print("该会话还没有 checkpoint")
 
 
 if __name__ == "__main__":
@@ -149,7 +182,7 @@ if __name__ == "__main__":
 
     demo_session_uid = "d7f06fd9-9f85-f255-0482-1a2a721ceec1"
     demo_user_uid = "61cc1d3b-d34d-8154-bc0e-fcf25eb7eb56"
-    read(demo_user_uid,demo_session_uid)
+    read(demo_user_uid, demo_session_uid)
     while (user_input := input("Enter: ")) != "exit":
         print(
             "AI:",
