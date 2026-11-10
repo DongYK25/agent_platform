@@ -15,6 +15,7 @@ jupyter
 langchain-community 
 pypdf 
 langchain-text-splitters
-# angchain-chroma    ###????
-# angchain-huggingface   ###????
-sentence-transformers
+# 本地生成多语言文本向量（不需要调用收费的 Embedding API）
+sentence-transformers>=3.0
+# 让 Psycopg 能直接读写 PostgreSQL 的 vector 类型
+pgvector>=0.3
