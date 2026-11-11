@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from typing import Annotated, Sequence, TypedDict
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage,AnyMessage
 from langchain_openai import ChatOpenAI
 # from langgraph.graph import StateGraph, START, END
 # from langgraph.checkpoint.memory import MemorySaver
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 class AgentState(TypedDict):
-    messages: Annotated[Sequence[BaseMessage], add_messages]
+    messages: Annotated[list[AnyMessage], add_messages]
 
 llm = ChatOpenAI(
     model=os.getenv("DEEPSEEK_MODEL") or "deepseek-v4-flash",
