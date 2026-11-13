@@ -11,7 +11,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from agent.db import get_history_message
+from fastapi_deom.agent.memory.db import get_history_message
 from fastapi_deom.agent.memory.memory_api import chat_api
 
 from ..dependencies import SessionDep

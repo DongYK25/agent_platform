@@ -36,7 +36,7 @@ graph.add_edge(START, "process")
 graph.add_edge("process", END)
 agent = graph.compile()
 
-from ..db import add_message,get_history_message
+from .db import add_message,get_history_message
 def chat_api(user_input: str,session_uid: str,user_uid: str) -> str:
     """只送入本轮用户消息；同一 thread 的历史由检查点和 add_messages 合并。"""
     history_messages,sequence_no = get_history_message(session_uid=session_uid,user_uid=user_uid)
