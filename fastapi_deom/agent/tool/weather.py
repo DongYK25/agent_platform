@@ -96,13 +96,13 @@ if __name__ == "__main__":
     messages = ShortMemoryCheckpointer.read(demo_user_uid,demo_session_uid)
     # print(messages)
 
-    # memory = ShortMemoryCheckpointer(graph)
-    # while (user_input := input("Enter: ")) != "exit":
-    #     print(
-    #         "AI:",
-    #         memory.chat(
-    #             user_input,
-    #             session_uid=demo_session_uid,
-    #             user_uid=demo_user_uid,
-    #         ),
-    #     )
+    memory = ShortMemoryCheckpointer(graph)
+    while (user_input := input("Enter: ")) != "exit":
+        print(
+            "AI:",
+            memory.chat(
+                user_input,
+                session_uid=demo_session_uid,
+                user_uid=demo_user_uid,
+            ),
+        )

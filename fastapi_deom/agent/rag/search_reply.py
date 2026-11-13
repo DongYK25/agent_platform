@@ -177,7 +177,6 @@ def _latest_question(state: AgentState) -> str:
             return content if isinstance(content, str) else str(content)
     raise ValueError("消息中没有用户问题")
 
-
 def _format_context(documents: list[Document]) -> str:
     """将检索结果整理为带来源编号的上下文，并限制提示词长度。"""
     sections: list[str] = []
