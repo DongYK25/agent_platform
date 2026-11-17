@@ -4,7 +4,7 @@ from langchain_core.tools import tool
 from langgraph.graph import StateGraph,START,END
 from langgraph.prebuilt import ToolNode
 from sentence_transformers import SentenceTransformer
-from fastapi_deom.agent.baseConfig import AgentState, llm, get_connection_info
+from agent.baseConfig import AgentState, llm, get_connection_info
 from ..document_ingest import DocumentVectorTool
 from ..search_reply import PgVectorRetriever
 from .simple_document_ingest import ingest_text_file

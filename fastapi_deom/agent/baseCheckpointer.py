@@ -1,8 +1,8 @@
 
 from langgraph.checkpoint.postgres import PostgresSaver
-from fastapi_deom.agent.baseConfig import get_connection_info
+from agent.baseConfig import get_connection_info
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-from langgraph.graph import StateGraph, START, END, tool
+from langgraph.graph import StateGraph
 
 def thread_config(user_uid: str, session_uid: str) -> dict:
     """同一用户、同一会话必须始终得到同一个 thread_id。"""
@@ -19,9 +19,11 @@ def thread_config(user_uid: str, session_uid: str) -> dict:
 class ShortMemoryCheckpointer:
     """按用户会话读写 LangGraph 短期记忆。调用前假定 checkpoint 表已经存在。"""
     
+    _conninfo = get_connection_info()
+
     def __init__(self, graph: StateGraph) -> None:
         self.graph = graph
-    _conninfo = get_connection_info()
+    
     def chat(self, user_input: str, session_uid: str, user_uid: str) -> str:
         """只提交本轮输入；历史读取、状态合并和持久化均由 PostgresSaver 完成。"""
         config = thread_config(user_uid=user_uid, session_uid=session_uid)

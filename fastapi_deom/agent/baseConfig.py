@@ -22,8 +22,11 @@ llm = ChatOpenAI(
     base_url="https://api.deepseek.com",
 )
 
-EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+# EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+EMBEDDING_MODEL = r"D:\Users\paraphrase-multilingual-MiniLM-L12-v2"
 VECTOR_DIMENSION = 384
+# EMBEDDING_MODEL = "BAAI/bge-base-zh-v1.5"
+# VECTOR_DIMENSION = 768
 DB_SCHEMA = 'agent'
 
 def get_connection_info() -> str:
@@ -42,13 +45,14 @@ def latest_question(state: AgentState) -> str:
         if isinstance(message, HumanMessage):
             content = message.content
             return content if isinstance(content, str) else str(content)
-    raise ""
+    raise ValueError("消息中没有用户问题") 
 
 ###
 
 def build_graph_demo() -> StateGraph:
     @tool
     def test_tool():
+        '''工具需要添加描述'''
         return "test_tool"
     tools = [test_tool]
     llm_with_tools = llm.bind_tools(tools)

@@ -17,3 +17,4 @@ class SessionTitleUpdate(BaseModel):
 class AgentResponse(BaseModel):
     """模型回复"""
     msg: str = Field(description="模型回复")
+

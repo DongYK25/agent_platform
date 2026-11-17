@@ -29,7 +29,7 @@ from pgvector.psycopg import register_vector
 from psycopg.conninfo import make_conninfo
 from sentence_transformers import SentenceTransformer
 
-from fastapi_deom.agent.baseConfig import AgentState, llm
+from agent.baseConfig import AgentState, llm
 from app.database import DB_SCHEMA, database_url
 
 

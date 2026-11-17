@@ -2,7 +2,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID,uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from sqlmodel import select
@@ -11,8 +11,9 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from fastapi_deom.agent.memory.db import get_history_message
-from fastapi_deom.agent.memory.memory_api import chat_api
+from agent.memory.db import get_history_message
+from agent.memory.memory_api import chat_api
+from agent.api import chat_agent
 
 from ..dependencies import SessionDep
 from ..models.base import utcnow
@@ -170,3 +171,14 @@ def delete_user_session(session_uid: UUID, request: Request, db: SessionDep):
     db.delete(row)
     db.commit()
     return ResponseCommon.success()
+
+
+
+@router.post("/chat/ai_response", response_model=ResponseCommon)
+def ai_response(request: Request, body: AgentRequest):
+    user_uid = _user_uid(request)
+    new_uuid = body.session_uid
+    user_input = body.msg.strip()
+    reply = chat_agent(user_input, str(new_uuid), str(user_uid))
+    return ResponseCommon.success(data=reply)
+
