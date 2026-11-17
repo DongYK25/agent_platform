@@ -4,16 +4,16 @@ from langchain_core.tools import tool
 from langgraph.graph import StateGraph,START,END
 from langgraph.prebuilt import ToolNode
 from sentence_transformers import SentenceTransformer
-from agent.base import AgentState, llm, get_connection_info
-from agent.rag.document_ingest import DocumentVectorTool
-from agent.rag.search_reply import PgVectorRetriever
-from agent.rag.practice.simple_document_ingest import ingest_text_file
+from fastapi_deom.agent.baseConfig import AgentState, llm, get_connection_info
+from ..document_ingest import DocumentVectorTool
+from ..search_reply import PgVectorRetriever
+from .simple_document_ingest import ingest_text_file
 
 # 查询和入库必须使用同一个 Embedding 模型。
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 VECTOR_DIMENSION = 384
 
-from agent.rag.practice.simple_search_vector import search_similar_chunks,question_to_vector
+from .simple_search_vector import search_similar_chunks,question_to_vector
 
 # @tool
 # def search_knowledge_base(question: str):
