@@ -83,16 +83,25 @@ def chat_agent(user_input: str, session_uid: str, user_uid: str) -> str:
         user_uid=user_uid,
     )
 
+def delete_message(session_uid: str, user_uid: str) -> str:
+    """与智能体进行对话。"""
+    memory = ShortMemoryCheckpointer(graph=build_graph())
+    return memory.removeMessage(
+        session_uid=session_uid,
+        user_uid=user_uid,
+    )
+
 if __name__ == "__main__":
     # print("0",datetime.now())
     print(111,datetime.now())
-    demo_session_uid = "11"
-    demo_user_uid = "121212"
-    ai_response = chat_agent("公司几点下班",demo_session_uid,demo_user_uid)
-    print("AI:",ai_response)
-    print(222,datetime.now())
+    session_uid = "61cc1d3b-d34d-8154-bc0e-fcf25eb7eb56"
+    user_uid = "d7f06fd9-9f85-f255-0482-1a2a721ceec1"
+    # ai_response = chat_agent("公司几点下班",session_uid,user_uid)
+    # print("AI:",ai_response)
+    # print(222,datetime.now())
 
-
+    del_response = delete_message(session_uid,user_uid)
+    print("AI:",del_response)
 
     ######------------------------------
     # ###读取历史消息###

@@ -44,3 +44,11 @@ export function sendChat(msg: string, sessionUid: string) {
     body: JSON.stringify({ msg, session_uid: sessionUid }),
   })
 }
+
+/** 企业知识库助手仅调用此接口，会话 ID 由前端创建。 */
+export function sendKnowledgeAgentMessage(msg: string, sessionUid: string) {
+  return request<string>('/agent/chat/ai_response', {
+    method: 'POST',
+    body: JSON.stringify({ msg, session_uid: sessionUid }),
+  })
+}

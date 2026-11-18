@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppShell from '../layouts/AppShell.vue'
 import { session } from '../session'
 import ChatView from '../views/ChatView.vue'
+import KnowledgeAgentView from '../views/KnowledgeAgentView.vue'
 import LoginView from '../views/LoginView.vue'
 import UsersView from '../views/UsersView.vue'
 import WorkOrdersView from '../views/WorkOrdersView.vue'
@@ -30,6 +31,11 @@ export const router = createRouter({
         { path: 'users', component: UsersView, meta: { title: '用户' } },
         { path: 'work-orders', component: WorkOrdersView, meta: { title: '工单' } },
         { path: 'chat', component: ChatView, meta: { title: '对话', fill: true } },
+        {
+          path: 'knowledge-agent',
+          component: KnowledgeAgentView,
+          meta: { title: '企业知识助手', fill: true },
+        },
       ],
     },
   ],

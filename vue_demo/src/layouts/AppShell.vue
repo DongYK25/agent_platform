@@ -10,6 +10,7 @@ const nav = [
   { to: '/work-orders', label: '工单', hint: '处理事项' },
   { to: '/users', label: '用户', hint: '账号' },
   { to: '/chat', label: '对话', hint: 'Agent' },
+  { to: '/knowledge-agent', label: '知识助手', hint: '企业知识库' },
 ]
 
 const initial = computed(() => (session.username || '?').slice(0, 1).toUpperCase())

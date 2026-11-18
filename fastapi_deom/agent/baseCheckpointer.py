@@ -1,7 +1,7 @@
 
 from langgraph.checkpoint.postgres import PostgresSaver
 from agent.baseConfig import get_connection_info
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, RemoveMessage
 from langgraph.graph import StateGraph
 
 def thread_config(user_uid: str, session_uid: str) -> dict:
@@ -39,6 +39,37 @@ class ShortMemoryCheckpointer:
 
         reply = result["messages"][-1].content
         return reply if isinstance(reply, str) else str(reply)
+
+    def removeMessage(
+        self,
+        session_uid: str,
+        user_uid: str,
+        keep_last: int = 3,
+    ) -> int:
+        """从当前会话状态中移除较早的消息，只保留最后 keep_last 条。"""
+        if keep_last < 0:
+            raise ValueError("keep_last 不能小于 0")
+
+        config = thread_config(user_uid=user_uid, session_uid=session_uid)
+
+        with PostgresSaver.from_conn_string(self._conninfo) as checkpointer:
+            agent = self.graph.compile(checkpointer=checkpointer)
+            state = agent.get_state(config)
+            messages = list(state.values.get("messages", []))
+
+            old_messages = messages[:-keep_last] if keep_last else messages
+            removals = [
+                RemoveMessage(id=message.id)
+                for message in old_messages
+                if message.id is not None
+            ]
+
+            if removals:
+                # messages 字段必须使用 add_messages reducer，RemoveMessage 才能生效。
+                agent.update_state(config, {"messages": removals})
+
+        return len(removals)
+
     @classmethod
     def read(cls, user_uid: str, session_uid: str) -> list[BaseMessage]:
         """读取该用户在该会话中已保存的消息。没有记录时返回空列表。"""
