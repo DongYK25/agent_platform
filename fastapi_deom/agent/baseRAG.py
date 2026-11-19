@@ -22,6 +22,8 @@ from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import hashlib
 
+model_embedding = SentenceTransformer(EMBEDDING_MODEL)
+
 class QueryRAG:
     """RAG类,查询数据库相关"""
     @classmethod
@@ -31,8 +33,7 @@ class QueryRAG:
         if not question:
             raise ValueError("问题不能为空")
 
-        model = SentenceTransformer(EMBEDDING_MODEL)
-        query_vector = model.encode(
+        query_vector = model_embedding.encode(
             question,
             normalize_embeddings=True,
             show_progress_bar=False,

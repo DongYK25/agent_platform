@@ -13,7 +13,7 @@ if str(_ROOT) not in sys.path:
 
 from agent.memory.db import get_history_message
 from agent.memory.memory_api import chat_api
-from agent.api import chat_agent
+from agent.api2 import chat_agent
 
 from ..dependencies import SessionDep
 from ..models.base import utcnow
