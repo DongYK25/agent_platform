@@ -1,0 +1,4 @@
+tortoise-orm[psycopg]
+asyncpg
+pyjwt
+pycasbin

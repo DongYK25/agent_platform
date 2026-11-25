@@ -1,0 +1,6 @@
+p, admin, ^/.*$, ^.*$
+
+p, manager, ^/api/v1/workOrders(/.*)?$, ^(GET|POST|PUT|DELETE)$
+p, manager, ^/api/v1/roles(/.*)?$, ^(GET|POST|PUT|DELETE)$
+
+p, employee, ^/api/v1/workOrders(/.*)?$, ^(GET|POST|PUT|DELETE)$

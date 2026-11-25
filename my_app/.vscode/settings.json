@@ -1,0 +1,8 @@
+{
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportInvalidTypeForm": "none"
+    },
+    "python.terminal.useEnvFile": true,
+    "kiroAgent.agentIgnoreFiles": [".kiroignore"]
+
+}

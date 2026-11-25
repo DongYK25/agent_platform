@@ -1,7 +1,15 @@
 [project]
-name = "my-app"
+name = "fastapi-common"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "asyncpg>=0.32.0",
     "fastapi[standard]>=0.165.0",
+    "pycasbin>=2.8.0",
+    "pyjwt>=2.15.1",
+    "tortoise-orm[psycopg]>=1.1.9",
 ]
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
